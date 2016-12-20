@@ -57,6 +57,7 @@ import com.android.internal.telephony.ITelephony;
 
 import com.android.internal.util.custom.CustomUtils;
 import com.android.server.pm.PackageManagerService;
+import com.android.server.policy.GlobalActions;
 
 import android.util.Log;
 import android.view.WindowManager;
@@ -140,10 +141,11 @@ public final class ShutdownThread extends Thread {
      * @param confirm true if user confirmation is needed before shutting down.
      */
     public static void shutdown(final Context context, String reason, boolean confirm) {
+        final Context mContext = getContext(context);
         mReboot = false;
         mRebootSafeMode = false;
         mReason = reason;
-        shutdownInner(context, confirm);
+        shutdownInner(mContext, confirm);
     }
 
     private static boolean isAdvancedRebootPossible(final Context context) {
@@ -195,12 +197,13 @@ public final class ShutdownThread extends Thread {
         if (confirm) {
             final CloseDialogReceiver closer = new CloseDialogReceiver(context);
             final boolean advancedReboot = isAdvancedRebootPossible(context);
-
+            final Context mContext = getContext(context);
             if (sConfirmDialog != null) {
                 sConfirmDialog.dismiss();
                 sConfirmDialog = null;
             }
             AlertDialog.Builder confirmDialogBuilder = new AlertDialog.Builder(context)
+            sConfirmDialog = new AlertDialog.Builder(context)
                     .setTitle(mRebootSafeMode
                             ? com.android.internal.R.string.reboot_safemode_title
                             : mReboot
@@ -303,11 +306,12 @@ public final class ShutdownThread extends Thread {
      * @param confirm true if user confirmation is needed before shutting down.
      */
     public static void reboot(final Context context, String reason, boolean confirm) {
+        final Context mContext = getContext(context);
         mReboot = true;
         mRebootSafeMode = false;
         mRebootHasProgressBar = false;
         mReason = reason;
-        shutdownInner(context, confirm);
+        shutdownInner(mContext, confirm);
     }
 
     /**
@@ -318,6 +322,7 @@ public final class ShutdownThread extends Thread {
      * @param confirm true if user confirmation is needed before shutting down.
      */
     public static void rebootSafeMode(final Context context, boolean confirm) {
+        final Context mContext = getContext(context);
         UserManager um = (UserManager) context.getSystemService(Context.USER_SERVICE);
         if (um.hasUserRestriction(UserManager.DISALLOW_SAFE_BOOT)) {
             return;
@@ -327,7 +332,7 @@ public final class ShutdownThread extends Thread {
         mRebootSafeMode = true;
         mRebootHasProgressBar = false;
         mReason = null;
-        shutdownInner(context, confirm);
+        shutdownInner(mContext, confirm);
     }
 
     private static void beginShutdownSequence(Context context) {
@@ -868,5 +873,9 @@ public final class ShutdownThread extends Thread {
                 Log.e(TAG, "Failed to write timeout message to uncrypt status", e);
             }
         }
+    }
+
+    private static Context getContext(Context context) {
+        return GlobalActions.getContext(context);
     }
 }
