@@ -29,4 +29,7 @@
     <!-- OmniJaws detailed view temperature text -->
     <color name="omni_jaws_detailed_temperature_color">@android:color/white</color>
 
+    <!-- pixel theme -->
+    <color name="pixel_primary_color">#242424</color>
+
 </resources>
